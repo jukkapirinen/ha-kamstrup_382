@@ -20,7 +20,9 @@ from homeassistant.util import dt
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import KamstrupUpdateCoordinator
 
-DESCRIPTIONS: list[SensorEntityDescription] = [
+
+# Kamstrup 403
+DESCRIPTIONS_403: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="60",  # 0x003C
         name="Heat Energy (E1)",
@@ -214,7 +216,7 @@ DESCRIPTIONS: list[SensorEntityDescription] = [
 ]
 
 
-DATE_DESCRIPTIONS: list[SensorEntityDescription] = [
+DATE_DESCRIPTIONS_403: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="140",  # 0x008C
         name="MinFlowDate_M",
@@ -273,6 +275,136 @@ DATE_DESCRIPTIONS: list[SensorEntityDescription] = [
     ),
 ]
 
+# Kamstrup 382
+
+DESCRIPTIONS_382: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="1",  # 0x0001
+        name="TotalEnergyIn",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="2",  # 0x0002
+        name="TotalEnergyOut",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="13",  # 0x000d
+        name="EnergyInHiRes",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="14",  # 0x000e
+        name="EnergyOutHiRes",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1023",  # 0x03ff
+        name="PowerIn",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="1024",  # 0x0400
+        name="PowerOut",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="39",  # 0x0027
+        name="MaxPower",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1054",  # 0x041e
+        name="VoltageP1",
+	icon="mdi:alpha-v-circle-outline",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1055",  # 0x041f
+        name="VoltageP2",
+	icon="mdi:alpha-v-circle-outline",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1056",  # 0x0420
+        name="VoltageP3",
+	icon="mdi:alpha-v-circle-outline",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1076",  # 0x0434
+        name="CurrentP1",
+	icon="mdi:alpha-a-circle-outline",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1077",  # 0x0435
+        name="CurrentP2",
+	icon="mdi:alpha-a-circle-outline",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1078",  # 0x0436
+        name="CurrentP3",
+	icon="mdi:alpha-a-circle-outline",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1080",  # 0x0438 
+        name="PowerInP1",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1081",  # 0x0439
+        name="PowerInP2",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="1082",  # 0x0440
+        name="PowerInP3",
+	icon="mdi:lightning-bolt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -284,6 +416,17 @@ async def async_setup_entry(
 
     entities: list[KamstrupSensor] = []
 
+    # Get the device model from the configuration entry data
+    device_model = entry.data["model"]
+
+    # Add all meter sensors based on the device model.
+    if device_model == "403":
+        DESCRIPTIONS = DESCRIPTIONS_403
+        DATE_DESCRIPTIONS = DATE_DESCRIPTIONS_403
+    elif device_model == "382":
+        DESCRIPTIONS = DESCRIPTIONS_382
+        DATE_DESCRIPTIONS = []
+
     # Add all meter sensors.
     for description in DESCRIPTIONS:
         entities.append(
@@ -291,6 +434,7 @@ async def async_setup_entry(
                 coordinator=coordinator,
                 entry_id=entry.entry_id,
                 description=description,
+                device_model=device_model,
             )
         )
 
@@ -301,25 +445,28 @@ async def async_setup_entry(
                 coordinator=coordinator,
                 entry_id=entry.entry_id,
                 description=date_description,
+                device_model=device_model,
             )
         )
 
-    # Add a "gas" sensor.
-    entities.append(
-        KamstrupGasSensor(
-            coordinator=coordinator,
-            entry_id=entry.entry_id,
-            description=SensorEntityDescription(
-                key="gas",
-                name="Heat Energy to Gas",
-                icon="mdi:gas-burner",
-                native_unit_of_measurement=VOLUME_CUBIC_METERS,
-                device_class=SensorDeviceClass.GAS,
-                state_class=SensorStateClass.TOTAL_INCREASING,
-                entity_registry_enabled_default=False,
-            ),
+    # Add a "gas" sensor for 403
+    if device_model == "403":
+        entities.append(
+            KamstrupGasSensor(
+                coordinator=coordinator,
+                entry_id=entry.entry_id,
+                device_model=device_model,
+                description=SensorEntityDescription(
+                    key="gas",
+                    name="Heat Energy to Gas",
+                    icon="mdi:gas-burner",
+                    native_unit_of_measurement=VOLUME_CUBIC_METERS,
+                    device_class=SensorDeviceClass.GAS,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
+                    entity_registry_enabled_default=False,
+                ),
+            )
         )
-    )
 
     async_add_entities(entities)
 
@@ -332,13 +479,14 @@ class KamstrupSensor(CoordinatorEntity[KamstrupUpdateCoordinator], SensorEntity)
         coordinator: KamstrupUpdateCoordinator,
         entry_id: str,
         description: SensorEntityDescription,
+        device_model: str,
     ) -> None:
         """Initialize Kamstrup sensor."""
         super().__init__(coordinator=coordinator)
 
-        self.entity_id = f"{SENSOR_DOMAIN}.{DEFAULT_NAME}_{description.name}".lower()
+        self.entity_id = f"{SENSOR_DOMAIN}.{DEFAULT_NAME}_{device_model}_{description.name}".lower()
         self.entity_description = description
-        self._attr_unique_id = f"{entry_id}-{DEFAULT_NAME} {self.name}"
+        self._attr_unique_id = f"{entry_id}-{DEFAULT_NAME}_{device_model} {self.name}"
         self._attr_device_info = coordinator.device_info
 
 
