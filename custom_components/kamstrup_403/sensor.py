@@ -396,7 +396,7 @@ DESCRIPTIONS_382: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="1082",  # 0x0440
+        key="1082",  # 0x043a
         name="PowerInP3",
 	icon="mdi:lightning-bolt",
         device_class=SensorDeviceClass.POWER,
